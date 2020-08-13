@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash,session
 import mysql.connector
 from werkzeug.utils import redirect
+import os
 
 app = Flask(__name__)
+app.secret_key=os.urandom(24)
 
 conn = mysql.connector.connect(
     host="localhost",  # hostname
@@ -16,7 +18,10 @@ cursor = conn.cursor()
 
 @app.route('/index')
 def index():
-    return render_template('index.html')
+    if 'id' in session:
+        return render_template('index.html')
+    else:
+        return redirect('/')
 
 
 @app.route('/')
@@ -36,6 +41,7 @@ def login_validation():
     cursor.execute("select * from users where email like '{}' and password like '{}'".format(email, password))
     user = cursor.fetchall()
     if len(user) > 0:
+        session['id']=user[0][0]
         return redirect('index')
     else:
         return redirect('login')
@@ -47,9 +53,12 @@ def add_data():
     email = request.form.get('uemail')
     password = request.form.get('upassword')
     cursor.execute(
-        """insert into users (username,email,password) values ('{}','{}','{}')""".format(username, email, password))
+        """insert into users (id,username,email,password) values (NULL,'{}','{}','{}')""".format(username, email, password))
     conn.commit()
-    return "<h2>User registered Successfully</h2>"
+    cursor.execute("select * from users where email like '{}' and password like '{}'".format(email, password))
+    user = cursor.fetchall()
+    session['id'] = user[0][0]
+    return redirect('/')
 
 
 if __name__ == "__main__":
