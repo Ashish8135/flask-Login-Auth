@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, flash
 import mysql.connector
+from werkzeug.utils import redirect
 
 app = Flask(__name__)
 
@@ -35,9 +36,9 @@ def login_validation():
     cursor.execute("select * from users where email like '{}' and password like '{}'".format(email, password))
     user = cursor.fetchall()
     if len(user) > 0:
-        return render_template('index.html')
+        return redirect('index')
     else:
-        return render_template('login.html')
+        return redirect('login')
 
 
 @app.route('/add_data', methods=['POST'])
@@ -48,7 +49,7 @@ def add_data():
     cursor.execute(
         """insert into users (username,email,password) values ('{}','{}','{}')""".format(username, email, password))
     conn.commit()
-    return "User registered Successfully"
+    return "<h2>User registered Successfully</h2>"
 
 
 if __name__ == "__main__":
